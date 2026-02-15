@@ -67,7 +67,7 @@ Tables include:
 ## Data Generation Process
 The notebook:
 1) creates a population of synthetic users,
-2) assigns a small fraction as “abuse-like” users,
+2) assigns a small fraction as abuse-like users,
 3) generates events over a multi-day window,
 4) injects patterns commonly associated with abuse, such as bursts, repeated prompts, policy-evasion attempts, and shared identifiers to mimic coordinated actors,
 5) derives core tables and features for detection and monitoring.
@@ -111,4 +111,5 @@ Run the notebook top-to-bottom. Outputs are written into:
 - `out_notebook/`
 
 ## Contact
-Repository: https://github.com/mpetalcorin/Trust-Safety-Protection-Science-End-to-End-Monitoring-Detection
+Repository: Github https://github.com/mpetalcorin/Trust-Safety-Protection-Science-End-to-End-Monitoring-Detection
+
