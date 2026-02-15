@@ -1,1 +1,118 @@
-# Model Card, Baseline Abuse Risk Scoring Model (User-Day)## Model OverviewThis repository includes a baseline binary classifier that estimates the probability that a **user-day** (a single user’s activity aggregated over one day) represents **abuse-like behavior**.The model is intended to support a Trust & Safety workflow by:- prioritizing items for **human review**,- helping trigger **monitoring alerts** and **triage**,- supporting **policy enforcement** decisions when combined with human oversight and additional safeguards.This is a proof-of-concept model trained on **synthetic data**.## Intended Use**Primary intended uses**- Risk scoring for triage and queue prioritization.- Demonstrating how to integrate ML into monitoring + review workflows.- Measuring and visualizing tradeoffs (precision/recall) and selecting thresholds.**Out of scope**- Fully automated enforcement without review.- Decisions about real users without additional context and governance.- Use in high-stakes contexts without robust evaluation, red-teaming, privacy review, and policy alignment.## Model Type- **Algorithm:** Logistic Regression- **Task:** Binary classification (abuse-like vs non-abuse-like) at the **user-day** level- **Output:** `risk_score` in [0,1]## Features (Inputs)The model uses aggregated signals derived from raw events:- `n_events`, `n_chat`- `tokens_in_sum`, `tokens_out_sum`- `latency_ms_avg`- `n_blocked`, `n_warned`- `n_ips`, `n_devices`- `block_rate`, `warn_rate`- `chat_fraction`These features are produced in the notebook from SQL core tables and written to:- `out_notebook/user_day_scored.csv`## Training Data- **Source:** Synthetic telemetry generated in-notebook.- **Label:** `is_abuse_gt` (synthetic ground truth flag assigned at user level, then propagated to user-day).Because this is synthetic, the data distribution and label quality do not represent a real product environment.## EvaluationThe notebook reports evaluation metrics on a held-out synthetic test split, including:- precision- recall- F1- ROC-AUC (when applicable)It also plots a **Precision–Recall curve** and selects a threshold using a simple train-time F1 sweep.**Important:** These metrics are valid only for the synthetic dataset created by the notebook and should not be generalized.## Decision ThresholdingThe notebook selects a threshold to demonstrate how teams can:- tune for high precision (reduce false positives),- tune for high recall (catch more abuse),- or pick an operational tradeoff.In practice, thresholding should depend on:- harm severity,- downstream reviewer capacity,- cost of false positives vs false negatives,- and policy requirements.## Human-in-the-Loop SafeguardsThis model is designed to be used with:- uncertainty routing (ambiguous scores ? review),- enrichment for reviewers (recent prompts and activity),- audit logs capturing decisions and rationale,- deduplication and clustering to reduce reviewer load,- entity resolution to detect coordinated networks.The model output alone is not considered sufficient for enforcement.## Drift MonitoringThe notebook includes a simple drift check using PSI (Population Stability Index) comparing recent days vs earlier days for the feature distribution.This is intended as an example of how to detect when:- user behavior changes,- adversaries adapt,- or product changes shift telemetry.## Ethical Considerations and RisksPotential risks when adapting to real systems include:- disparate impact across user groups,- over-enforcement and false positives,- privacy risks from logging and enrichment fields,- adversarial adaptation and evasion,- feedback loops (enforcement changes future data).Mitigations typically include:- privacy-by-design telemetry,- careful labeling guidelines and QA,- fairness and error analysis,- red teaming,- layered defenses (rules + ML + human review).## Limitations- Synthetic data only.- Simplified labels and behavior patterns.- Baseline model class and features.- Does not include calibrated probabilities, cost-sensitive learning, or advanced robustness techniques.- Not a production detection system.## How to ReproduceRun the notebook from top to bottom. It will:- generate raw events,- build SQL core tables,- train and evaluate the model,- export `user_day_scored.csv` including `risk_score` and `uncertainty`.## ContactRepository: GitHub
+# Model Card, Baseline Abuse Risk Scoring Model (User-Day)
+
+## Model Overview
+This repository includes a baseline binary classifier that estimates the probability that a **user-day** (a single user activity aggregated over one day) represents **abuse-like behavior**.
+
+The model is intended to support a Trust & Safety workflow by:
+- prioritizing items for **human review**,
+- helping trigger **monitoring alerts** and **triage**,
+- supporting **policy enforcement** decisions when combined with human oversight and additional safeguards.
+
+This is a proof-of-concept model trained on **synthetic data**.
+## Intended Use
+**Primary intended uses**
+- Risk scoring for triage and queue prioritization.
+- Demonstrating how to integrate ML into monitoring + review workflows.
+- Measuring and visualizing tradeoffs (precision/recall) and selecting thresholds.
+
+**Out of scope**
+- Fully automated enforcement without review.
+- Decisions about real users without additional context and governance.
+- Use in high-stakes contexts without robust evaluation, red-teaming, privacy review, and policy alignment.
+
+## Model Type
+- **Algorithm:** Logistic Regression
+- **Task:** Binary classification (abuse-like vs non-abuse-like) at the **user-day** level
+- **Output:** `risk_score` in [0,1]
+
+## Features (Inputs)
+The model uses aggregated signals derived from raw events:
+
+- `n_events`, `n_chat`
+- `tokens_in_sum`, `tokens_out_sum`
+- `latency_ms_avg`
+- `n_blocked`, `n_warned`
+- `n_ips`, `n_devices`
+- `block_rate`, `warn_rate`
+- `chat_fraction`
+
+These features are produced in the notebook from SQL core tables and written to:
+- `out_notebook/user_day_scored.csv`
+
+## Training Data
+- **Source:** Synthetic telemetry generated in-notebook.
+- **Label:** `is_abuse_gt` (synthetic ground truth flag assigned at user level, then propagated to user-day).
+
+Because this is synthetic, the data distribution and label quality do not represent a real product environment.
+
+## Evaluation
+The notebook reports evaluation metrics on a held-out synthetic test split, including:
+- precision
+- recall
+- F1
+- ROC-AUC (when applicable)
+
+It also plots a **Precision√êRecall curve** and selects a threshold using a simple train-time F1 sweep.
+
+**Important:** These metrics are valid only for the synthetic dataset created by the notebook and should not be generalized.
+
+## Decision Thresholding
+The notebook selects a threshold to demonstrate how teams can:
+- tune for high precision (reduce false positives),
+- tune for high recall (catch more abuse),
+- or pick an operational tradeoff.
+
+In practice, thresholding should depend on:
+- harm severity,
+- downstream reviewer capacity,
+- cost of false positives vs false negatives,
+- and policy requirements.
+
+## Human-in-the-Loop Safeguards
+This model is designed to be used with:
+- uncertainty routing (ambiguous scores review),
+- enrichment for reviewers (recent prompts and activity),
+- audit logs capturing decisions and rationale,
+- deduplication and clustering to reduce reviewer load,
+- entity resolution to detect coordinated networks.
+
+The model output alone is not considered sufficient for enforcement.
+## Drift Monitoring
+The notebook includes a simple drift check using PSI (Population Stability Index) comparing recent days vs earlier days for the feature distribution.
+
+This is intended as an example of how to detect when:
+- user behavior changes,
+- adversaries adapt,
+- or product changes shift telemetry.
+
+## Ethical Considerations and Risks
+Potential risks when adapting to real systems include:
+- disparate impact across user groups,
+- over-enforcement and false positives,
+- privacy risks from logging and enrichment fields,
+- adversarial adaptation and evasion,
+- feedback loops (enforcement changes future data).
+
+Mitigations typically include:
+- privacy-by-design telemetry,
+- careful labeling guidelines and QA,
+- fairness and error analysis,
+- red teaming,
+- layered defenses (rules + ML + human review).
+
+## Limitations
+- Synthetic data only.
+- Simplified labels and behavior patterns.
+- Baseline model class and features.
+- Does not include calibrated probabilities, cost-sensitive learning, or advanced robustness techniques.
+- Not a production detection system.
+
+## How to Reproduce
+Run the notebook from top to bottom. It will:
+- generate raw events,
+- build SQL core tables,
+- train and evaluate the model,
+- export `user_day_scored.csv` including `risk_score` and `uncertainty`.
+
+## Contact
+Repository: GitHub: https://github.com/mpetalcorin/Trust-Safety-Protection-Science-End-to-End-Monitoring-Detection
